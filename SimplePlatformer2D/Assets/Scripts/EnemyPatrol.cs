@@ -1,73 +1,32 @@
-using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
 public class EnemyPatrol : MonoBehaviour
 {
     [SerializeField] private Transform leftPoint;
     [SerializeField] private Transform rightPoint;
-    [SerializeField] private float speed = 2f;
     [SerializeField] private float reachDistance = 0.1f;
+    [SerializeField, Min(0)] private float defaultPatrolDistance = 2f;
 
-    private Rigidbody2D rigidbody2D;
-    private Transform target;
-    private float previousDirection;
-
-    public event Action<float> DirectionChanged;
+    private float leftX;
+    private float rightX;
+    private bool movingRight = true;
 
     private void Awake()
     {
-        rigidbody2D = GetComponent<Rigidbody2D>();
+        // Store world positions so child waypoints do not move the patrol area.
+        float firstX = leftPoint != null ? leftPoint.position.x : transform.position.x - defaultPatrolDistance;
+        float secondX = rightPoint != null ? rightPoint.position.x : transform.position.x + defaultPatrolDistance;
+        leftX = Mathf.Min(firstX, secondX);
+        rightX = Mathf.Max(firstX, secondX);
     }
 
-    private void Start()
+    public float GetTargetPositionX()
     {
-        target = rightPoint;
-    }
+        if (movingRight && transform.position.x >= rightX - reachDistance)
+            movingRight = false;
+        else if (movingRight == false && transform.position.x <= leftX + reachDistance)
+            movingRight = true;
 
-    private void FixedUpdate()
-    {
-        Move();
-
-        if (IsTargetReached())
-        {
-            ChangeTarget();
-        }
-    }
-
-    private void Move()
-    {
-        float direction =
-            Mathf.Sign(target.position.x - transform.position.x);
-
-        rigidbody2D.velocity =
-            new Vector2(direction * speed, rigidbody2D.velocity.y);
-
-        if (direction != previousDirection)
-        {
-            previousDirection = direction;
-
-            DirectionChanged?.Invoke(direction);
-        }
-    }
-
-    private bool IsTargetReached()
-    {
-        float distance =
-            Mathf.Abs(target.position.x - transform.position.x);
-
-        return distance <= reachDistance;
-    }
-
-    private void ChangeTarget()
-    {
-        if (target == rightPoint)
-        {
-            target = leftPoint;
-        }
-        else
-        {
-            target = rightPoint;
-        }
+        return movingRight ? rightX : leftX;
     }
 }

@@ -3,7 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(SpriteRenderer))]
 public class EnemyView : MonoBehaviour
 {
-    [SerializeField] private EnemyPatrol patrol;
+    [SerializeField] private EnemyMovement movement;
 
     private SpriteRenderer spriteRenderer;
 
@@ -14,12 +14,12 @@ public class EnemyView : MonoBehaviour
 
     private void OnEnable()
     {
-        patrol.DirectionChanged += OnDirectionChanged;
+        movement.DirectionChanged += OnDirectionChanged;
     }
 
     private void OnDisable()
     {
-        patrol.DirectionChanged -= OnDirectionChanged;
+        movement.DirectionChanged -= OnDirectionChanged;
     }
 
     private void OnDirectionChanged(float direction)

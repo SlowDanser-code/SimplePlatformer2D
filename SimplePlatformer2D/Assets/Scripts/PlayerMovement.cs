@@ -11,14 +11,14 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float groundCheckRadius = 0.2f;
     [SerializeField] private LayerMask groundLayer;
 
-    private Rigidbody2D rigidbody2D;
+    private Rigidbody2D body;
     private SpriteRenderer spriteRenderer;
 
     private float direction;
 
     private void Awake()
     {
-        rigidbody2D = GetComponent<Rigidbody2D>();
+        body = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
@@ -48,8 +48,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Move()
     {
-        rigidbody2D.velocity =
-            new Vector2(direction * speed, rigidbody2D.velocity.y);
+        body.velocity =
+            new Vector2(direction * speed, body.velocity.y);
     }
 
     private void Flip()
@@ -68,8 +68,8 @@ public class PlayerMovement : MonoBehaviour
     {
         if (IsGrounded())
         {
-            rigidbody2D.velocity =
-                new Vector2(rigidbody2D.velocity.x, jumpForce);
+            body.velocity =
+                new Vector2(body.velocity.x, jumpForce);
         }
     }
 
@@ -79,5 +79,13 @@ public class PlayerMovement : MonoBehaviour
             groundCheck.position,
             groundCheckRadius,
             groundLayer);
+    }
+
+    public void Stop()
+    {
+        direction = 0;
+
+        body.velocity =
+            new Vector2(0, body.velocity.y);
     }
 }

@@ -5,6 +5,12 @@ public class PlayerInputReader : MonoBehaviour
 {
     public event Action<float> MovementInputChanged;
     public event Action JumpPressed;
+    public event Action AttackPressed;
+
+    private void OnDisable()
+    {
+        MovementInputChanged?.Invoke(0);
+    }
 
     private void Update()
     {
@@ -15,6 +21,11 @@ public class PlayerInputReader : MonoBehaviour
         if (Input.GetButtonDown("Jump"))
         {
             JumpPressed?.Invoke();
+        }
+
+        if (Input.GetButtonDown("Fire1"))
+        {
+            AttackPressed?.Invoke();
         }
     }
 }
