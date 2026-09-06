@@ -131,11 +131,11 @@ PrefabInstance:
     m_TransformParent: {fileID: 1561431322}
     m_Modifications:
     - target: {fileID: 863579850264561723, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
-      propertyPath: leftPoint
+      propertyPath: _leftPoint
       value: 
       objectReference: {fileID: 173610771}
     - target: {fileID: 863579850264561723, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
-      propertyPath: rightPoint
+      propertyPath: _rightPoint
       value: 
       objectReference: {fileID: 1621199589}
     - target: {fileID: 1595850079241223860, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
@@ -304,6 +304,8 @@ GameObject:
   - component: {fileID: 234546919}
   - component: {fileID: 234546922}
   - component: {fileID: 234546923}
+  - component: {fileID: 234546924}
+  - component: {fileID: 234546925}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -463,12 +465,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f98fdf38e732ec49a20cb1e7d5d4cc9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inputReader: {fileID: 234546915}
-  speed: 5
-  jumpForce: 7
-  groundCheck: {fileID: 198749916}
-  groundCheckRadius: 0.2
-  groundLayer:
+  _inputReader: {fileID: 234546915}
+  _speed: 5
+  _jumpForce: 7
+  _groundCheck: {fileID: 198749916}
+  _groundCheckRadius: 0.2
+  _groundLayer:
     serializedVersion: 2
     m_Bits: 8
 --- !u!114 &234546915
@@ -516,7 +518,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce5ba23085ce067419c0370080439cb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inputReader: {fileID: 234546915}
+  _inputReader: {fileID: 234546915}
 --- !u!114 &234546918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -541,8 +543,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5912affcab766c44b824db24965ac0a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inputReader: {fileID: 234546915}
-  attack: {fileID: 234546920}
+  _inputReader: {fileID: 234546915}
+  _attack: {fileID: 234546920}
 --- !u!114 &234546920
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -555,13 +557,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 131df120f304e3544a26a914292b2099, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 25
-  attackRadius: 1
-  attackCooldown: 0.5
-  targetLayer:
+  _damage: 25
+  _attackRadius: 1
+  _attackCooldown: 0.5
+  _targetLayer:
     serializedVersion: 2
     m_Bits: 128
-  obstacleLayer:
+  _obstacleLayer:
     serializedVersion: 2
     m_Bits: 8
 --- !u!114 &234546921
@@ -576,7 +578,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd673a920b455d8418df666cf288650d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxValue: 100
+  _maxValue: 100
 --- !u!114 &234546922
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -589,9 +591,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f3bfe1f76a78f845b424fe0b782472d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inputReader: {fileID: 234546915}
-  movement: {fileID: 234546914}
-  attackController: {fileID: 234546919}
+  _inputReader: {fileID: 234546915}
+  _movement: {fileID: 234546914}
+  _attackController: {fileID: 234546919}
 --- !u!114 &234546923
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -813,15 +815,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9ee47206f734649afbea2db9cca1bd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  medkitPrefab: {fileID: 799445564, guid: be56551b3aba484985f0d141f0877ae3, type: 3}
-  spawnPoints:
+  _medkitPrefab: {fileID: 799445564, guid: be56551b3aba484985f0d141f0877ae3, type: 3}
+  _spawnPoints:
   - {fileID: 2100000011}
   - {fileID: 2100000021}
   - {fileID: 2100000031}
   - {fileID: 2100000041}
   - {fileID: 2100000051}
   - {fileID: 2100000061}
-  spawnCount: 3
+  _spawnCount: 3
 --- !u!1 &2100000010
 GameObject:
   m_ObjectHideFlags: 0
@@ -1037,13 +1039,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fb30e761d67b754682114f5a634fce5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  coinPool: {fileID: 1116567888}
-  spawnPoints:
+  _coinPool: {fileID: 1116567888}
+  _spawnPoints:
   - {fileID: 625570079}
   - {fileID: 1775718877}
   - {fileID: 242960321}
   - {fileID: 2015838867}
-  spawnDelay: 2
+  _spawnDelay: 2
 --- !u!4 &988731289
 Transform:
   m_ObjectHideFlags: 0
@@ -1088,8 +1090,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d8cd141defd415448123e573a802026, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  coinPrefab: {fileID: 5549860965783692234, guid: b028a26092b81824789ff25422b82dcd, type: 3}
-  initialSize: 5
+  _coinPrefab: {fileID: 5549860965783692234, guid: b028a26092b81824789ff25422b82dcd, type: 3}
+  _initialSize: 5
 --- !u!4 &1116567889
 Transform:
   m_ObjectHideFlags: 0
@@ -1472,11 +1474,11 @@ PrefabInstance:
     m_TransformParent: {fileID: 1561431322}
     m_Modifications:
     - target: {fileID: 863579850264561723, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
-      propertyPath: leftPoint
+      propertyPath: _leftPoint
       value: 
       objectReference: {fileID: 1278120360}
     - target: {fileID: 863579850264561723, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
-      propertyPath: rightPoint
+      propertyPath: _rightPoint
       value: 
       objectReference: {fileID: 1287896887}
     - target: {fileID: 1595850079241223860, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
@@ -1524,7 +1526,7 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8915842060997010293, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
-      propertyPath: targetLayer.m_Bits
+      propertyPath: _targetLayer.m_Bits
       value: 64
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -1532,6 +1534,30 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
+--- !u!114 &234546924
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 234546909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8af1fd8a3ba4970a40c92a640a25da1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+--- !u!114 &234546925
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 234546909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19bb1cdc7d044376820c426456df320e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

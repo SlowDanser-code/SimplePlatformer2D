@@ -1,23 +1,23 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class Health : MonoBehaviour
 {
-    [SerializeField, Min(1)] private float maxValue = 100f;
-
-    private float currentValue;
+    [FormerlySerializedAs("maxValue")]
+    [SerializeField, Min(1)] private float _maxValue = 100f;
 
     public event Action<float> Changed;
     public event Action Died;
 
-    public float CurrentValue => currentValue;
-    public float MaxValue => maxValue;
-    public bool IsAlive => currentValue > 0;
+    public float CurrentValue { get; private set; }
+    public float MaxValue => _maxValue;
+    public bool IsAlive => CurrentValue > 0;
 
     private void Awake()
     {
-        maxValue = Mathf.Max(1, maxValue);
-        currentValue = maxValue;
+        _maxValue = Mathf.Max(1, _maxValue);
+        CurrentValue = _maxValue;
     }
 
     public void TakeDamage(float damage)
@@ -25,11 +25,11 @@ public class Health : MonoBehaviour
         if (damage <= 0 || IsAlive == false)
             return;
 
-        currentValue = Mathf.Max(currentValue - damage, 0);
+        CurrentValue = Mathf.Max(CurrentValue - damage, 0);
 
-        Debug.Log($"{name}: здоровье = {currentValue}");
+        Debug.Log($"{name}: здоровье = {CurrentValue}");
 
-        Changed?.Invoke(currentValue);
+        Changed?.Invoke(CurrentValue);
 
         if (IsAlive == false)
         {
@@ -42,12 +42,12 @@ public class Health : MonoBehaviour
         if (value <= 0 || IsAlive == false)
             return false;
 
-        if (currentValue >= maxValue)
+        if (CurrentValue >= _maxValue)
             return false;
 
-        currentValue = Mathf.Min(currentValue + value, maxValue);
+        CurrentValue = Mathf.Min(CurrentValue + value, _maxValue);
 
-        Changed?.Invoke(currentValue);
+        Changed?.Invoke(CurrentValue);
 
         return true;
     }

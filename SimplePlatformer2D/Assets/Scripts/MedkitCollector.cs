@@ -3,11 +3,11 @@ using UnityEngine;
 [RequireComponent(typeof(Health))]
 public class MedkitCollector : MonoBehaviour
 {
-    private Health health;
+    private Health _health;
 
     private void Awake()
     {
-        health = GetComponent<Health>();
+        _health = GetComponent<Health>();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -26,7 +26,7 @@ public class MedkitCollector : MonoBehaviour
 
         if (medkit != null)
         {
-            medkit.TryUse(health);
+            medkit.TryUse(_health);
         }
     }
 }

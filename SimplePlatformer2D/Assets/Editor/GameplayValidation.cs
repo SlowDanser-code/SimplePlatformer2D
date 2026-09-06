@@ -10,11 +10,11 @@ using Object = UnityEngine.Object;
 [InitializeOnLoad]
 public static class GameplayValidation
 {
-    private const string RunningKey = "GameplayValidation.Running";
-    private const string FailedKey = "GameplayValidation.Failed";
-    private static IEnumerator checks;
-    private static int lastFrame = -1;
-    private static double deadline;
+    private const string _runningKey = "GameplayValidation.Running";
+    private const string _failedKey = "GameplayValidation.Failed";
+    private static IEnumerator _checks;
+    private static int _lastFrame = -1;
+    private static double _deadline;
 
     static GameplayValidation()
     {
@@ -31,27 +31,27 @@ public static class GameplayValidation
             throw new InvalidOperationException("Save your scene before validation.");
 
         EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
-        SessionState.SetBool(RunningKey, true);
-        SessionState.SetBool(FailedKey, false);
+        SessionState.SetBool(_runningKey, true);
+        SessionState.SetBool(_failedKey, false);
         EditorApplication.EnterPlaymode();
     }
 
     private static void OnPlayModeChanged(PlayModeStateChange state)
     {
-        if (SessionState.GetBool(RunningKey, false) == false)
+        if (SessionState.GetBool(_runningKey, false) == false)
             return;
 
         if (state == PlayModeStateChange.EnteredPlayMode)
         {
-            checks = CheckGameplay();
-            deadline = EditorApplication.timeSinceStartup + 60;
+            _checks = CheckGameplay();
+            _deadline = EditorApplication.timeSinceStartup + 60;
             Application.logMessageReceived += OnLog;
             EditorApplication.update += Tick;
         }
         else if (state == PlayModeStateChange.EnteredEditMode)
         {
-            SessionState.SetBool(RunningKey, false);
-            bool failed = SessionState.GetBool(FailedKey, false);
+            SessionState.SetBool(_runningKey, false);
+            bool failed = SessionState.GetBool(_failedKey, false);
             if (Application.isBatchMode)
                 EditorApplication.Exit(failed ? 1 : 0);
         }
@@ -60,21 +60,21 @@ public static class GameplayValidation
     private static void OnLog(string message, string stack, LogType type)
     {
         if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert)
-            SessionState.SetBool(FailedKey, true);
+            SessionState.SetBool(_failedKey, true);
     }
 
     private static void Tick()
     {
         try
         {
-            if (EditorApplication.timeSinceStartup > deadline)
+            if (EditorApplication.timeSinceStartup > _deadline)
                 throw new Exception("Gameplay validation timed out.");
 
-            if (lastFrame == Time.frameCount)
+            if (_lastFrame == Time.frameCount)
                 return;
 
-            lastFrame = Time.frameCount;
-            if (checks.MoveNext())
+            _lastFrame = Time.frameCount;
+            if (_checks.MoveNext())
                 return;
 
             Finish();
@@ -82,7 +82,7 @@ public static class GameplayValidation
         catch (Exception exception)
         {
             Debug.LogException(exception);
-            SessionState.SetBool(FailedKey, true);
+            SessionState.SetBool(_failedKey, true);
             Finish();
         }
     }
@@ -91,7 +91,7 @@ public static class GameplayValidation
     {
         EditorApplication.update -= Tick;
         Application.logMessageReceived -= OnLog;
-        Debug.Log(SessionState.GetBool(FailedKey, false)
+        Debug.Log(SessionState.GetBool(_failedKey, false)
             ? "GAMEPLAY VALIDATION FAILED"
             : "GAMEPLAY VALIDATION PASSED");
         EditorApplication.ExitPlaymode();
@@ -124,6 +124,15 @@ public static class GameplayValidation
         Medkit[] medkits = Object.FindObjectsOfType<Medkit>();
 
         Check(enemies.Length == 2, "Scene contains two enemies.");
+        Check(enemies.All(e =>
+        {
+            SerializedObject patrol = new SerializedObject(e.GetComponent<EnemyPatrol>());
+            return patrol.FindProperty("_leftPoint").objectReferenceValue != null &&
+                   patrol.FindProperty("_rightPoint").objectReferenceValue != null;
+        }), "Patrol waypoint overrides survive serialized field renaming.");
+        Check(player.GetComponent<TargetScanner>() != null &&
+              enemies.All(e => e.GetComponents<TargetScanner>().Length == 1),
+            "Player and enemies have the shared scanner, with one instance per enemy.");
         Check(medkits.Length == 3, "Scene spawns three medkits.");
         Check(medkits.Select(m => m.transform.position).Distinct().Count() == 3,
             "Medkits occupy distinct spawn points.");
@@ -135,6 +144,10 @@ public static class GameplayValidation
         player.enabled = false;
         playerBody.gravityScale = 0;
         Place(playerBody, new Vector2(0, 20));
+        CheckFacing(player.transform, direction => player.SendMessage("OnMovementInputChanged", direction));
+        player.Stop();
+        CheckFacing(enemies[0].transform, enemies[0].GetComponent<EntityRotator>().Rotate);
+        CheckScanner();
         float startX = enemies[0].transform.position.x;
         float until = Time.time + 1f;
         while (Time.time < until)
@@ -158,6 +171,7 @@ public static class GameplayValidation
         while (Time.time < until)
             yield return null;
         Check(enemyBody.velocity.x > 0, "Enemy pursues the visible player.");
+        Check(enemy.transform.localScale.x > 0, "Enemy movement turns its Transform toward the player.");
 
         Place(playerBody, new Vector2(0, 20));
         Place(enemyBody, new Vector2(0, 0.02f));
@@ -167,6 +181,8 @@ public static class GameplayValidation
         float patrolX = enemy.GetComponent<EnemyPatrol>().GetTargetPositionX();
         Check(detector.TryGetPlayer(out _) == false && enemyBody.velocity.x * (patrolX - enemy.transform.position.x) > 0,
             "Enemy returns toward its patrol route after losing the player.");
+        Check(Mathf.Sign(enemy.transform.localScale.x) == Mathf.Sign(enemyBody.velocity.x),
+            "Enemy view keeps the hierarchy facing its patrol direction.");
 
         enemy.enabled = false;
         enemyBody.gravityScale = 0;
@@ -258,5 +274,70 @@ public static class GameplayValidation
             "Enemy prefab patrol works without manually assigned waypoints.");
         Object.Destroy(instance);
         yield return null;
+    }
+
+    private static void CheckFacing(Transform entity, Action<float> turn)
+    {
+        Vector3 originalScale = entity.localScale;
+        entity.localScale = new Vector3(1.5f, 2, 1);
+        GameObject probe = new GameObject("Validation child trigger");
+        probe.transform.SetParent(entity, false);
+        probe.transform.localPosition = new Vector3(0.75f, 0.25f, 0);
+        BoxCollider2D trigger = probe.AddComponent<BoxCollider2D>();
+        trigger.isTrigger = true;
+        trigger.size = new Vector2(0.1f, 0.1f);
+
+        turn(-1);
+        Physics2D.SyncTransforms();
+        Check(probe.transform.position.x < entity.position.x && trigger.bounds.center.x < entity.position.x,
+            entity.name + ": facing left also moves the child Transform and trigger to the left.");
+        turn(0);
+        Check(entity.localScale.x == -1.5f, entity.name + ": stopping preserves the facing direction.");
+        turn(1);
+        Physics2D.SyncTransforms();
+        Check(probe.transform.position.x > entity.position.x && trigger.bounds.center.x > entity.position.x &&
+              entity.localScale == new Vector3(1.5f, 2, 1),
+            entity.name + ": facing right restores the hierarchy and preserves scale magnitudes.");
+
+        Object.Destroy(probe);
+        entity.localScale = originalScale;
+        Physics2D.SyncTransforms();
+    }
+
+    private static void CheckScanner()
+    {
+        GameObject owner = new GameObject("Validation scanner");
+        owner.transform.position = new Vector3(50, 50, 0);
+        TargetScanner scanner = owner.AddComponent<TargetScanner>();
+        int enemyLayer = LayerMask.NameToLayer("Enemy");
+        int playerLayer = LayerMask.NameToLayer("Player");
+        Collider2D near = CreateScanTarget(owner.transform, 0.5f, enemyLayer, false);
+        CreateScanTarget(owner.transform, 2, enemyLayer, false);
+        Collider2D otherLayer = CreateScanTarget(owner.transform, 0.6f, playerLayer, false);
+        CreateScanTarget(owner.transform, 0.2f, enemyLayer, true);
+        Physics2D.SyncTransforms();
+
+        var targets = scanner.Scan(1, 1 << enemyLayer);
+        Check(targets.Count == 1 && targets[0] == near,
+            "Scanner respects radius and layer while excluding trigger colliders.");
+        Check(scanner.Scan(3, 1 << enemyLayer).Count == 2,
+            "The same scanner supports a larger detection radius.");
+        targets = scanner.Scan(1, 1 << playerLayer);
+        Check(targets.Count == 1 && targets[0] == otherLayer,
+            "Changing the scanner layer does not retain results from the previous query.");
+        Check(scanner.Scan(0.05f, 1 << enemyLayer).Count == 0,
+            "An empty scan clears the previous results.");
+        Object.Destroy(owner);
+    }
+
+    private static Collider2D CreateScanTarget(Transform parent, float x, int layer, bool isTrigger)
+    {
+        GameObject target = new GameObject("Validation target") { layer = layer };
+        target.transform.SetParent(parent, false);
+        target.transform.localPosition = new Vector3(x, 0, 0);
+        BoxCollider2D collider = target.AddComponent<BoxCollider2D>();
+        collider.size = new Vector2(0.1f, 0.1f);
+        collider.isTrigger = isTrigger;
+        return collider;
     }
 }

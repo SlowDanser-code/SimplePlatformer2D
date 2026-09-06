@@ -1,31 +1,33 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(Animator))]
 public class PlayerAnimator : MonoBehaviour
 {
-    private const string IsRunning = "IsRunning";
+    private const string _isRunning = "IsRunning";
 
-    [SerializeField] private PlayerInputReader inputReader;
+    [FormerlySerializedAs("inputReader")]
+    [SerializeField] private PlayerInputReader _inputReader;
 
-    private Animator animator;
+    private Animator _animator;
 
     private void Awake()
     {
-        animator = GetComponent<Animator>();
+        _animator = GetComponent<Animator>();
     }
 
     private void OnEnable()
     {
-        inputReader.MovementInputChanged += OnMovementInputChanged;
+        _inputReader.MovementInputChanged += OnMovementInputChanged;
     }
 
     private void OnDisable()
     {
-        inputReader.MovementInputChanged -= OnMovementInputChanged;
+        _inputReader.MovementInputChanged -= OnMovementInputChanged;
     }
 
     private void OnMovementInputChanged(float direction)
     {
-        animator.SetBool(IsRunning, direction != 0);
+        _animator.SetBool(_isRunning, direction != 0);
     }
 }

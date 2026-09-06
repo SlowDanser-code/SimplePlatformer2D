@@ -1,22 +1,28 @@
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-[RequireComponent(typeof(Health))]
+[RequireComponent(typeof(Health), typeof(TargetScanner))]
 public class Attack : MonoBehaviour
 {
-    [SerializeField] private float damage = 20f;
-    [SerializeField] private float attackRadius = 1f;
-    [SerializeField] private float attackCooldown = 1f;
-    [SerializeField] private LayerMask targetLayer;
-    [SerializeField] private LayerMask obstacleLayer;
+    [FormerlySerializedAs("damage")]
+    [SerializeField] private float _damage = 20f;
+    [FormerlySerializedAs("attackRadius")]
+    [SerializeField] private float _attackRadius = 1f;
+    [FormerlySerializedAs("attackCooldown")]
+    [SerializeField] private float _attackCooldown = 1f;
+    [FormerlySerializedAs("targetLayer")]
+    [SerializeField] private LayerMask _targetLayer;
+    [FormerlySerializedAs("obstacleLayer")]
+    [SerializeField] private LayerMask _obstacleLayer;
 
-    private readonly List<Collider2D> targets = new List<Collider2D>();
-    private Health health;
-    private float nextAttackTime;
+    private TargetScanner _targetScanner;
+    private Health _health;
+    private float _nextAttackTime;
 
     private void Awake()
     {
-        health = GetComponent<Health>();
+        _health = GetComponent<Health>();
+        _targetScanner = GetComponent<TargetScanner>();
     }
 
     public bool IsTargetInRange()
@@ -26,7 +32,7 @@ public class Attack : MonoBehaviour
 
     public bool TryAttack()
     {
-        if (isActiveAndEnabled == false || health.IsAlive == false || Time.time < nextAttackTime)
+        if (isActiveAndEnabled == false || _health.IsAlive == false || Time.time < _nextAttackTime)
             return false;
 
         Health targetHealth = FindTargetHealth();
@@ -34,30 +40,25 @@ public class Attack : MonoBehaviour
         if (targetHealth == null || targetHealth.IsAlive == false)
             return false;
 
-        nextAttackTime = Time.time + attackCooldown;
-        targetHealth.TakeDamage(damage);
+        _nextAttackTime = Time.time + _attackCooldown;
+        targetHealth.TakeDamage(_damage);
 
         return true;
     }
 
     private Health FindTargetHealth()
     {
-        ContactFilter2D filter = new ContactFilter2D();
-        filter.SetLayerMask(targetLayer);
-        filter.useTriggers = false;
-        Physics2D.OverlapCircle(transform.position, attackRadius, filter, targets);
-
         Health nearest = null;
         float nearestDistance = float.PositiveInfinity;
 
-        foreach (Collider2D targetCollider in targets)
+        foreach (Collider2D targetCollider in _targetScanner.Scan(_attackRadius, _targetLayer))
         {
             Health candidate = targetCollider.GetComponentInParent<Health>();
 
-            if (candidate == null || candidate == health || candidate.IsAlive == false)
+            if (candidate == null || candidate == _health || candidate.IsAlive == false)
                 continue;
 
-            if (Physics2D.Linecast(transform.position, targetCollider.bounds.center, obstacleLayer))
+            if (Physics2D.Linecast(transform.position, targetCollider.bounds.center, _obstacleLayer))
                 continue;
 
             float distance = ((Vector2)transform.position - targetCollider.ClosestPoint(transform.position)).sqrMagnitude;
@@ -74,8 +75,8 @@ public class Attack : MonoBehaviour
 
     private void OnValidate()
     {
-        damage = Mathf.Max(0, damage);
-        attackRadius = Mathf.Max(0.01f, attackRadius);
-        attackCooldown = Mathf.Max(0.01f, attackCooldown);
+        _damage = Mathf.Max(0, _damage);
+        _attackRadius = Mathf.Max(0.01f, _attackRadius);
+        _attackCooldown = Mathf.Max(0.01f, _attackCooldown);
     }
 }

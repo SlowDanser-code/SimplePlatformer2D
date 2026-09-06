@@ -1,17 +1,22 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class EnemyAI : MonoBehaviour
 {
-    [SerializeField] private EnemyDetector detector;
-    [SerializeField] private EnemyMovement movement;
-    [SerializeField] private EnemyPatrol patrol;
-    [SerializeField] private Attack attack;
+    [FormerlySerializedAs("detector")]
+    [SerializeField] private EnemyDetector _detector;
+    [FormerlySerializedAs("movement")]
+    [SerializeField] private EnemyMovement _movement;
+    [FormerlySerializedAs("patrol")]
+    [SerializeField] private EnemyPatrol _patrol;
+    [FormerlySerializedAs("attack")]
+    [SerializeField] private Attack _attack;
 
     private void FixedUpdate()
     {
-        if (detector.TryGetPlayer(out Transform player))
+        if (_detector.TryGetPlayer(out Transform player))
         {
-            if (attack.IsTargetInRange())
+            if (_attack.IsTargetInRange())
             {
                 Attack();
             }
@@ -28,20 +33,20 @@ public class EnemyAI : MonoBehaviour
 
     private void Attack()
     {
-        movement.Stop();
+        _movement.Stop();
 
-        attack.TryAttack();
+        _attack.TryAttack();
     }
 
     private void Chase(Transform player)
     {
-        movement.MoveTo(player.position.x);
+        _movement.MoveTo(player.position.x);
     }
 
     private void Patrol()
     {
-        float targetX = patrol.GetTargetPositionX();
+        float targetX = _patrol.GetTargetPositionX();
 
-        movement.MoveTo(targetX);
+        _movement.MoveTo(targetX);
     }
 }

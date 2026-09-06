@@ -1,20 +1,24 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class CoinSpawner : MonoBehaviour
 {
-    [SerializeField] private CoinPool coinPool;
-    [SerializeField] private Transform[] spawnPoints;
-    [SerializeField] private float spawnDelay = 2f;
+    [FormerlySerializedAs("coinPool")]
+    [SerializeField] private CoinPool _coinPool;
+    [FormerlySerializedAs("spawnPoints")]
+    [SerializeField] private Transform[] _spawnPoints;
+    [FormerlySerializedAs("spawnDelay")]
+    [SerializeField] private float _spawnDelay = 2f;
 
-    private readonly List<Transform> freeSpawnPoints = new List<Transform>();
-    private readonly Dictionary<Coin, Transform> occupiedSpawnPoints =
+    private readonly List<Transform> _freeSpawnPoints = new List<Transform>();
+    private readonly Dictionary<Coin, Transform> _occupiedSpawnPoints =
         new Dictionary<Coin, Transform>();
 
     private void Start()
     {
-        freeSpawnPoints.AddRange(spawnPoints);
+        _freeSpawnPoints.AddRange(_spawnPoints);
 
         StartCoroutine(SpawnCoins());
     }
@@ -25,38 +29,38 @@ public class CoinSpawner : MonoBehaviour
         {
             Spawn();
 
-            yield return new WaitForSeconds(spawnDelay);
+            yield return new WaitForSeconds(_spawnDelay);
         }
     }
 
     private void Spawn()
     {
-        if (freeSpawnPoints.Count == 0)
+        if (_freeSpawnPoints.Count == 0)
             return;
 
-        int randomIndex = Random.Range(0, freeSpawnPoints.Count);
+        int randomIndex = Random.Range(0, _freeSpawnPoints.Count);
 
-        Transform spawnPoint = freeSpawnPoints[randomIndex];
+        Transform spawnPoint = _freeSpawnPoints[randomIndex];
 
-        Coin coin = coinPool.Get();
+        Coin coin = _coinPool.Get();
 
         coin.transform.position = spawnPoint.position;
 
         coin.Collected += OnCoinCollected;
 
-        freeSpawnPoints.Remove(spawnPoint);
-        occupiedSpawnPoints.Add(coin, spawnPoint);
+        _freeSpawnPoints.Remove(spawnPoint);
+        _occupiedSpawnPoints.Add(coin, spawnPoint);
     }
 
     private void OnCoinCollected(Coin coin)
     {
         coin.Collected -= OnCoinCollected;
 
-        Transform spawnPoint = occupiedSpawnPoints[coin];
+        Transform spawnPoint = _occupiedSpawnPoints[coin];
 
-        occupiedSpawnPoints.Remove(coin);
-        freeSpawnPoints.Add(spawnPoint);
+        _occupiedSpawnPoints.Remove(coin);
+        _freeSpawnPoints.Add(spawnPoint);
 
-        coinPool.Return(coin);
+        _coinPool.Return(coin);
     }
 }

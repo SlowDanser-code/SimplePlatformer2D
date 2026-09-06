@@ -1,16 +1,19 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class CoinPool : MonoBehaviour
 {
-    [SerializeField] private Coin coinPrefab;
-    [SerializeField] private int initialSize = 5;
+    [FormerlySerializedAs("coinPrefab")]
+    [SerializeField] private Coin _coinPrefab;
+    [FormerlySerializedAs("initialSize")]
+    [SerializeField] private int _initialSize = 5;
 
-    private readonly List<Coin> coins = new List<Coin>();
+    private readonly List<Coin> _coins = new List<Coin>();
 
     private void Awake()
     {
-        for (int i = 0; i < initialSize; i++)
+        for (int i = 0; i < _initialSize; i++)
         {
             CreateCoin();
         }
@@ -18,7 +21,7 @@ public class CoinPool : MonoBehaviour
 
     public Coin Get()
     {
-        foreach (Coin coin in coins)
+        foreach (Coin coin in _coins)
         {
             if (coin.gameObject.activeSelf == false)
             {
@@ -41,11 +44,11 @@ public class CoinPool : MonoBehaviour
 
     private Coin CreateCoin()
     {
-        Coin coin = Instantiate(coinPrefab, transform);
+        Coin coin = Instantiate(_coinPrefab, transform);
 
         coin.gameObject.SetActive(false);
 
-        coins.Add(coin);
+        _coins.Add(coin);
 
         return coin;
     }

@@ -1,29 +1,33 @@
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
+[RequireComponent(typeof(TargetScanner))]
 public class EnemyDetector : MonoBehaviour
 {
-    [SerializeField] private float detectionRadius = 5f;
-    [SerializeField] private LayerMask playerLayer;
-    [SerializeField] private LayerMask obstacleLayer;
+    [FormerlySerializedAs("detectionRadius")]
+    [SerializeField] private float _detectionRadius = 5f;
+    [FormerlySerializedAs("playerLayer")]
+    [SerializeField] private LayerMask _playerLayer;
+    [FormerlySerializedAs("obstacleLayer")]
+    [SerializeField] private LayerMask _obstacleLayer;
 
-    private readonly List<Collider2D> candidates = new List<Collider2D>();
+    private TargetScanner _targetScanner;
+
+    private void Awake()
+    {
+        _targetScanner = GetComponent<TargetScanner>();
+    }
 
     public bool TryGetPlayer(out Transform player)
     {
-        ContactFilter2D filter = new ContactFilter2D();
-        filter.SetLayerMask(playerLayer);
-        filter.useTriggers = false;
-        Physics2D.OverlapCircle(transform.position, detectionRadius, filter, candidates);
-
-        foreach (Collider2D playerCollider in candidates)
+        foreach (Collider2D playerCollider in _targetScanner.Scan(_detectionRadius, _playerLayer))
         {
             Health health = playerCollider.GetComponentInParent<Health>();
 
             if (health == null || health.IsAlive == false)
                 continue;
 
-            if (Physics2D.Linecast(transform.position, playerCollider.bounds.center, obstacleLayer))
+            if (Physics2D.Linecast(transform.position, playerCollider.bounds.center, _obstacleLayer))
                 continue;
 
             player = health.transform;

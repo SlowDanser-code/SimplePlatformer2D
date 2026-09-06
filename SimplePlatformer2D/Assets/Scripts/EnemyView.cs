@@ -1,36 +1,31 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
-[RequireComponent(typeof(SpriteRenderer))]
+[RequireComponent(typeof(EntityRotator))]
 public class EnemyView : MonoBehaviour
 {
-    [SerializeField] private EnemyMovement movement;
+    [FormerlySerializedAs("movement")]
+    [SerializeField] private EnemyMovement _movement;
 
-    private SpriteRenderer spriteRenderer;
+    private EntityRotator _rotator;
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        _rotator = GetComponent<EntityRotator>();
     }
 
     private void OnEnable()
     {
-        movement.DirectionChanged += OnDirectionChanged;
+        _movement.DirectionChanged += OnDirectionChanged;
     }
 
     private void OnDisable()
     {
-        movement.DirectionChanged -= OnDirectionChanged;
+        _movement.DirectionChanged -= OnDirectionChanged;
     }
 
     private void OnDirectionChanged(float direction)
     {
-        if (direction > 0)
-        {
-            spriteRenderer.flipX = false;
-        }
-        else if (direction < 0)
-        {
-            spriteRenderer.flipX = true;
-        }
+        _rotator.Rotate(direction);
     }
 }

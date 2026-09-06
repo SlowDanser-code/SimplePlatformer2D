@@ -1,37 +1,44 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
-[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Rigidbody2D), typeof(EntityRotator))]
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private PlayerInputReader inputReader;
-    [SerializeField] private float speed = 5f;
-    [SerializeField] private float jumpForce = 7f;
+    [FormerlySerializedAs("inputReader")]
+    [SerializeField] private PlayerInputReader _inputReader;
+    [FormerlySerializedAs("speed")]
+    [SerializeField] private float _speed = 5f;
+    [FormerlySerializedAs("jumpForce")]
+    [SerializeField] private float _jumpForce = 7f;
 
-    [SerializeField] private Transform groundCheck;
-    [SerializeField] private float groundCheckRadius = 0.2f;
-    [SerializeField] private LayerMask groundLayer;
+    [FormerlySerializedAs("groundCheck")]
+    [SerializeField] private Transform _groundCheck;
+    [FormerlySerializedAs("groundCheckRadius")]
+    [SerializeField] private float _groundCheckRadius = 0.2f;
+    [FormerlySerializedAs("groundLayer")]
+    [SerializeField] private LayerMask _groundLayer;
 
-    private Rigidbody2D body;
-    private SpriteRenderer spriteRenderer;
+    private Rigidbody2D _body;
+    private EntityRotator _rotator;
 
-    private float direction;
+    private float _direction;
 
     private void Awake()
     {
-        body = GetComponent<Rigidbody2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        _body = GetComponent<Rigidbody2D>();
+        _rotator = GetComponent<EntityRotator>();
     }
 
     private void OnEnable()
     {
-        inputReader.MovementInputChanged += OnMovementInputChanged;
-        inputReader.JumpPressed += Jump;
+        _inputReader.MovementInputChanged += OnMovementInputChanged;
+        _inputReader.JumpPressed += Jump;
     }
 
     private void OnDisable()
     {
-        inputReader.MovementInputChanged -= OnMovementInputChanged;
-        inputReader.JumpPressed -= Jump;
+        _inputReader.MovementInputChanged -= OnMovementInputChanged;
+        _inputReader.JumpPressed -= Jump;
     }
 
     private void FixedUpdate()
@@ -41,51 +48,39 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnMovementInputChanged(float newDirection)
     {
-        direction = newDirection;
+        _direction = newDirection;
 
-        Flip();
+        _rotator.Rotate(_direction);
     }
 
     private void Move()
     {
-        body.velocity =
-            new Vector2(direction * speed, body.velocity.y);
-    }
-
-    private void Flip()
-    {
-        if (direction > 0)
-        {
-            spriteRenderer.flipX = false;
-        }
-        else if (direction < 0)
-        {
-            spriteRenderer.flipX = true;
-        }
+        _body.velocity =
+            new Vector2(_direction * _speed, _body.velocity.y);
     }
 
     private void Jump()
     {
         if (IsGrounded())
         {
-            body.velocity =
-                new Vector2(body.velocity.x, jumpForce);
+            _body.velocity =
+                new Vector2(_body.velocity.x, _jumpForce);
         }
     }
 
     private bool IsGrounded()
     {
         return Physics2D.OverlapCircle(
-            groundCheck.position,
-            groundCheckRadius,
-            groundLayer);
+            _groundCheck.position,
+            _groundCheckRadius,
+            _groundLayer);
     }
 
     public void Stop()
     {
-        direction = 0;
+        _direction = 0;
 
-        body.velocity =
-            new Vector2(0, body.velocity.y);
+        _body.velocity =
+            new Vector2(0, _body.velocity.y);
     }
 }

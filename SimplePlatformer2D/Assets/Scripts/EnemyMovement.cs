@@ -1,23 +1,27 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class EnemyMovement : MonoBehaviour
 {
-    [SerializeField] private float speed = 2f;
-    [SerializeField] private LayerMask groundLayer;
-    [SerializeField, Min(0.01f)] private float groundProbeDistance = 0.2f;
+    [FormerlySerializedAs("speed")]
+    [SerializeField] private float _speed = 2f;
+    [FormerlySerializedAs("groundLayer")]
+    [SerializeField] private LayerMask _groundLayer;
+    [FormerlySerializedAs("groundProbeDistance")]
+    [SerializeField, Min(0.01f)] private float _groundProbeDistance = 0.2f;
 
-    private Rigidbody2D body;
-    private Collider2D bodyCollider;
-    private float previousDirection;
+    private Rigidbody2D _body;
+    private Collider2D _bodyCollider;
+    private float _previousDirection;
 
     public event Action<float> DirectionChanged;
 
     private void Awake()
     {
-        body = GetComponent<Rigidbody2D>();
-        bodyCollider = GetComponent<Collider2D>();
+        _body = GetComponent<Rigidbody2D>();
+        _bodyCollider = GetComponent<Collider2D>();
     }
 
     public void MoveTo(float targetX)
@@ -31,26 +35,26 @@ public class EnemyMovement : MonoBehaviour
         }
 
         float direction = Mathf.Sign(distance);
-        float velocity = direction * Mathf.Min(speed, Mathf.Abs(distance) / Time.fixedDeltaTime);
+        float velocity = direction * Mathf.Min(_speed, Mathf.Abs(distance) / Time.fixedDeltaTime);
 
-        if (groundLayer.value != 0)
+        if (_groundLayer.value != 0)
         {
-            Bounds bounds = bodyCollider.bounds;
-            Vector2 probe = new Vector2(bounds.center.x + direction * (bounds.extents.x + groundProbeDistance), bounds.min.y + 0.05f);
+            Bounds bounds = _bodyCollider.bounds;
+            Vector2 probe = new Vector2(bounds.center.x + direction * (bounds.extents.x + _groundProbeDistance), bounds.min.y + 0.05f);
 
-            if (Physics2D.Raycast(probe, Vector2.down, groundProbeDistance + 0.05f, groundLayer).collider == null)
+            if (Physics2D.Raycast(probe, Vector2.down, _groundProbeDistance + 0.05f, _groundLayer).collider == null)
             {
                 Stop();
                 return;
             }
         }
 
-        body.velocity =
-            new Vector2(velocity, body.velocity.y);
+        _body.velocity =
+            new Vector2(velocity, _body.velocity.y);
 
-        if (direction != previousDirection)
+        if (direction != _previousDirection)
         {
-            previousDirection = direction;
+            _previousDirection = direction;
 
             DirectionChanged?.Invoke(direction);
         }
@@ -58,7 +62,7 @@ public class EnemyMovement : MonoBehaviour
 
     public void Stop()
     {
-        body.velocity =
-            new Vector2(0, body.velocity.y);
+        _body.velocity =
+            new Vector2(0, _body.velocity.y);
     }
 }

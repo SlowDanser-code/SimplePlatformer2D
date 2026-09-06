@@ -1,22 +1,25 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class PlayerAttackController : MonoBehaviour
 {
-    [SerializeField] private PlayerInputReader inputReader;
-    [SerializeField] private Attack attack;
+    [FormerlySerializedAs("inputReader")]
+    [SerializeField] private PlayerInputReader _inputReader;
+    [FormerlySerializedAs("attack")]
+    [SerializeField] private Attack _attack;
 
     private void OnEnable()
     {
-        inputReader.AttackPressed += OnAttackPressed;
+        _inputReader.AttackPressed += OnAttackPressed;
     }
 
     private void OnDisable()
     {
-        inputReader.AttackPressed -= OnAttackPressed;
+        _inputReader.AttackPressed -= OnAttackPressed;
     }
 
     private void OnAttackPressed()
     {
-        attack.TryAttack();
+        _attack.TryAttack();
     }
 }
