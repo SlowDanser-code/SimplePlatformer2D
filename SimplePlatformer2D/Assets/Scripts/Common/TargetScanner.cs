@@ -6,7 +6,6 @@ public class TargetScanner : MonoBehaviour
 {
     private readonly List<Collider2D> _targets = new List<Collider2D>();
 
-    // The result is reused: consume it before the next Scan call on this component.
     public IReadOnlyList<Collider2D> Scan(float radius, LayerMask targetLayer)
     {
         ContactFilter2D filter = new ContactFilter2D();

@@ -16,6 +16,13 @@ public class CoinSpawner : MonoBehaviour
     private readonly Dictionary<Coin, Transform> _occupiedSpawnPoints =
         new Dictionary<Coin, Transform>();
 
+    private WaitForSeconds _spawnWait;
+
+    private void Awake()
+    {
+        _spawnWait = new WaitForSeconds(_spawnDelay);
+    }
+
     private void Start()
     {
         _freeSpawnPoints.AddRange(_spawnPoints);
@@ -29,7 +36,7 @@ public class CoinSpawner : MonoBehaviour
         {
             Spawn();
 
-            yield return new WaitForSeconds(_spawnDelay);
+            yield return _spawnWait;
         }
     }
 

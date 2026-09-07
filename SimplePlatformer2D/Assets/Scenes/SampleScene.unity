@@ -131,11 +131,15 @@ PrefabInstance:
     m_TransformParent: {fileID: 1561431322}
     m_Modifications:
     - target: {fileID: 863579850264561723, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
-      propertyPath: _leftPoint
+      propertyPath: _waypoints.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 863579850264561723, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
+      propertyPath: _waypoints.Array.data[1]
       value: 
       objectReference: {fileID: 173610771}
     - target: {fileID: 863579850264561723, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
-      propertyPath: _rightPoint
+      propertyPath: _waypoints.Array.data[0]
       value: 
       objectReference: {fileID: 1621199589}
     - target: {fileID: 1595850079241223860, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
@@ -518,7 +522,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce5ba23085ce067419c0370080439cb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _inputReader: {fileID: 234546915}
 --- !u!114 &234546918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1474,11 +1477,15 @@ PrefabInstance:
     m_TransformParent: {fileID: 1561431322}
     m_Modifications:
     - target: {fileID: 863579850264561723, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
-      propertyPath: _leftPoint
+      propertyPath: _waypoints.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 863579850264561723, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
+      propertyPath: _waypoints.Array.data[1]
       value: 
       objectReference: {fileID: 1278120360}
     - target: {fileID: 863579850264561723, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}
-      propertyPath: _rightPoint
+      propertyPath: _waypoints.Array.data[0]
       value: 
       objectReference: {fileID: 1287896887}
     - target: {fileID: 1595850079241223860, guid: 9d122110ac9630d4a8de86d9608299c4, type: 3}

@@ -3,6 +3,10 @@ using UnityEngine;
 
 public class PlayerInputReader : MonoBehaviour
 {
+    private const string _horizontalAxis = "Horizontal";
+    private const string _jumpButton = "Jump";
+    private const string _attackButton = "Fire1";
+
     public event Action<float> MovementInputChanged;
     public event Action JumpPressed;
     public event Action AttackPressed;
@@ -14,16 +18,16 @@ public class PlayerInputReader : MonoBehaviour
 
     private void Update()
     {
-        float direction = Input.GetAxisRaw("Horizontal");
+        float direction = Input.GetAxisRaw(_horizontalAxis);
 
         MovementInputChanged?.Invoke(direction);
 
-        if (Input.GetButtonDown("Jump"))
+        if (Input.GetButtonDown(_jumpButton))
         {
             JumpPressed?.Invoke();
         }
 
-        if (Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown(_attackButton))
         {
             AttackPressed?.Invoke();
         }

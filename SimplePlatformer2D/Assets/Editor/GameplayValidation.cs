@@ -127,9 +127,11 @@ public static class GameplayValidation
         Check(enemies.All(e =>
         {
             SerializedObject patrol = new SerializedObject(e.GetComponent<EnemyPatrol>());
-            return patrol.FindProperty("_leftPoint").objectReferenceValue != null &&
-                   patrol.FindProperty("_rightPoint").objectReferenceValue != null;
-        }), "Patrol waypoint overrides survive serialized field renaming.");
+            SerializedProperty waypoints = patrol.FindProperty("_waypoints");
+            return waypoints.arraySize == 2 &&
+                   waypoints.GetArrayElementAtIndex(0).objectReferenceValue != null &&
+                   waypoints.GetArrayElementAtIndex(1).objectReferenceValue != null;
+        }), "Scene enemies retain both assigned patrol waypoints in their route lists.");
         Check(player.GetComponent<TargetScanner>() != null &&
               enemies.All(e => e.GetComponents<TargetScanner>().Length == 1),
             "Player and enemies have the shared scanner, with one instance per enemy.");
@@ -147,6 +149,8 @@ public static class GameplayValidation
         CheckFacing(player.transform, direction => player.SendMessage("OnMovementInputChanged", direction));
         player.Stop();
         CheckFacing(enemies[0].transform, enemies[0].GetComponent<EntityRotator>().Rotate);
+        CheckPlayerAnimation(player);
+        CheckPatrolRoute();
         CheckScanner();
         float startX = enemies[0].transform.position.x;
         float until = Time.time + 1f;
@@ -171,7 +175,7 @@ public static class GameplayValidation
         while (Time.time < until)
             yield return null;
         Check(enemyBody.velocity.x > 0, "Enemy pursues the visible player.");
-        Check(enemy.transform.localScale.x > 0, "Enemy movement turns its Transform toward the player.");
+        Check(enemy.transform.right.x > 0.99f, "Enemy movement rotates its Transform toward the player.");
 
         Place(playerBody, new Vector2(0, 20));
         Place(enemyBody, new Vector2(0, 0.02f));
@@ -181,7 +185,7 @@ public static class GameplayValidation
         float patrolX = enemy.GetComponent<EnemyPatrol>().GetTargetPositionX();
         Check(detector.TryGetPlayer(out _) == false && enemyBody.velocity.x * (patrolX - enemy.transform.position.x) > 0,
             "Enemy returns toward its patrol route after losing the player.");
-        Check(Mathf.Sign(enemy.transform.localScale.x) == Mathf.Sign(enemyBody.velocity.x),
+        Check(Mathf.Sign(enemy.transform.right.x) == Mathf.Sign(enemyBody.velocity.x),
             "Enemy view keeps the hierarchy facing its patrol direction.");
 
         enemy.enabled = false;
@@ -255,23 +259,26 @@ public static class GameplayValidation
         Place(playerBody, new Vector2(-8.6f, 0.05f));
         int deathEvents = 0;
         playerHealth.Died += () => deathEvents++;
+        player.SendMessage("OnMovementInputChanged", 1f);
         playerHealth.TakeDamage(1000);
         playerHealth.TakeDamage(1000);
         Check(playerHealth.CurrentValue == 0 && deathEvents == 1, "Death fires once and health never becomes negative.");
         Check(player.enabled == false && player.GetComponent<PlayerInputReader>().enabled == false &&
               player.GetComponent<PlayerAttackController>().enabled == false,
             "Death disables movement, input and player attack controls.");
+        Check(player.GetComponent<Animator>().GetBool("IsRunning") == false,
+            "Death stops the player's running animation.");
         Check(detector.TryGetPlayer(out _) == false, "Enemy ignores the dead player in detection range.");
         Check(playerAttack.TryAttack() == false && playerHealth.TryHeal(25) == false,
             "Dead player cannot attack or heal.");
         enemyHealth.TakeDamage(1000);
         Check(enemy.gameObject.activeSelf == false, "Dead enemy is removed from gameplay.");
 
-        // Check that standalone prefab instances also have a safe patrol without scene waypoints.
+        // Check that standalone prefab instances retain their own route points.
         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Enemy.prefab");
         GameObject instance = Object.Instantiate(prefab, new Vector3(0, 10), Quaternion.identity);
         Check(instance.GetComponent<EnemyPatrol>().GetTargetPositionX() > instance.transform.position.x,
-            "Enemy prefab patrol works without manually assigned waypoints.");
+            "Enemy prefab patrol works with its included waypoints.");
         Object.Destroy(instance);
         yield return null;
     }
@@ -279,7 +286,9 @@ public static class GameplayValidation
     private static void CheckFacing(Transform entity, Action<float> turn)
     {
         Vector3 originalScale = entity.localScale;
-        entity.localScale = new Vector3(1.5f, 2, 1);
+        Quaternion originalRotation = entity.rotation;
+        Vector3 testScale = new Vector3(1.5f, 2, 1);
+        entity.localScale = testScale;
         GameObject probe = new GameObject("Validation child trigger");
         probe.transform.SetParent(entity, false);
         probe.transform.localPosition = new Vector3(0.75f, 0.25f, 0);
@@ -289,19 +298,94 @@ public static class GameplayValidation
 
         turn(-1);
         Physics2D.SyncTransforms();
-        Check(probe.transform.position.x < entity.position.x && trigger.bounds.center.x < entity.position.x,
-            entity.name + ": facing left also moves the child Transform and trigger to the left.");
+        Check(entity.right.x < -0.99f && entity.localScale == testScale &&
+              probe.transform.position.x < entity.position.x && trigger.bounds.center.x < entity.position.x,
+            entity.name + ": rotating left turns its hierarchy and trigger without changing scale.");
+        Quaternion stoppedRotation = entity.rotation;
         turn(0);
-        Check(entity.localScale.x == -1.5f, entity.name + ": stopping preserves the facing direction.");
+        Check(Quaternion.Angle(entity.rotation, stoppedRotation) < 0.01f && entity.localScale == testScale,
+            entity.name + ": stopping preserves rotation and scale.");
         turn(1);
         Physics2D.SyncTransforms();
-        Check(probe.transform.position.x > entity.position.x && trigger.bounds.center.x > entity.position.x &&
-              entity.localScale == new Vector3(1.5f, 2, 1),
-            entity.name + ": facing right restores the hierarchy and preserves scale magnitudes.");
+        Check(entity.right.x > 0.99f && entity.localScale == testScale &&
+              probe.transform.position.x > entity.position.x && trigger.bounds.center.x > entity.position.x,
+            entity.name + ": rotating right turns its hierarchy and trigger without changing scale.");
 
         Object.Destroy(probe);
         entity.localScale = originalScale;
+        entity.rotation = originalRotation;
         Physics2D.SyncTransforms();
+    }
+
+    private static void CheckPlayerAnimation(PlayerMovement player)
+    {
+        Animator animator = player.GetComponent<Animator>();
+        player.SendMessage("OnMovementInputChanged", 1f);
+        Check(animator.GetBool("IsRunning"), "Player movement starts the running animation.");
+        player.SendMessage("OnMovementInputChanged", 0f, SendMessageOptions.RequireReceiver);
+        Check(animator.GetBool("IsRunning") == false, "Releasing movement input stops the running animation.");
+        player.SendMessage("OnMovementInputChanged", -1f);
+        player.Stop();
+        Check(animator.GetBool("IsRunning") == false, "Stopping movement stops the running animation.");
+
+        player.enabled = true;
+        player.SendMessage("OnMovementInputChanged", 1f);
+        player.enabled = false;
+        Check(animator.GetBool("IsRunning") == false,
+            "Disabling player movement stops the running animation.");
+
+        GameObject owner = new GameObject("Validation independent animator");
+        Animator independentAnimator = owner.AddComponent<Animator>();
+        independentAnimator.runtimeAnimatorController = animator.runtimeAnimatorController;
+        PlayerAnimator playerAnimator = owner.AddComponent<PlayerAnimator>();
+        playerAnimator.SetRunning(true);
+        Check(independentAnimator.GetBool("IsRunning"),
+            "PlayerAnimator can start animation without an input or movement component.");
+        playerAnimator.SetRunning(false);
+        Check(independentAnimator.GetBool("IsRunning") == false,
+            "PlayerAnimator exposes a method to stop animation independently.");
+        Object.Destroy(owner);
+    }
+
+    private static void CheckPatrolRoute()
+    {
+        GameObject owner = new GameObject("Validation patrol route");
+        owner.SetActive(false);
+        owner.transform.position = new Vector3(50, 50, 0);
+        EnemyPatrol patrol = owner.AddComponent<EnemyPatrol>();
+        EntityRotator rotator = owner.AddComponent<EntityRotator>();
+        float[] route = { 52, 48, 50.5f };
+        SerializedObject serializedPatrol = new SerializedObject(patrol);
+        SerializedProperty waypoints = serializedPatrol.FindProperty("_waypoints");
+        waypoints.arraySize = route.Length;
+
+        for (int i = 0; i < route.Length; i++)
+        {
+            GameObject waypoint = new GameObject("Validation waypoint " + i);
+            waypoint.transform.SetParent(owner.transform, false);
+            waypoint.transform.position = new Vector3(route[i], 50, 0);
+            waypoints.GetArrayElementAtIndex(i).objectReferenceValue = waypoint.transform;
+        }
+
+        serializedPatrol.ApplyModifiedPropertiesWithoutUndo();
+        owner.SetActive(true);
+        Check(Mathf.Approximately(patrol.GetTargetPositionX(), route[0]),
+            "A route with three waypoints starts at the first listed point.");
+
+        owner.transform.position = new Vector3(60, 50, 0);
+        rotator.Rotate(-1);
+        Check(Mathf.Approximately(patrol.GetTargetPositionX(), route[0]),
+            "Moving and rotating a patrol owner does not shift its route or skip its current target.");
+
+        for (int i = 0; i < route.Length; i++)
+        {
+            owner.transform.position = new Vector3(route[i], 50, 0);
+            rotator.Rotate(i % 2 == 0 ? 1 : -1);
+            Check(Mathf.Approximately(patrol.GetTargetPositionX(), route[(i + 1) % route.Length]),
+                "Patrol visits waypoint " + (i + 1) + " in list order and advances along the fixed route.");
+        }
+
+        Object.Destroy(owner);
     }
 
     private static void CheckScanner()
