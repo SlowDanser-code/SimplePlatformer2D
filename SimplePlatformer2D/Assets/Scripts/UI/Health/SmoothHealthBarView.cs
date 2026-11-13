@@ -8,9 +8,9 @@ public class SmoothHealthBarView : HealthView
 
     private float targetValue;
 
-    protected override void OnEnable()
+    protected override void Start()
     {
-        base.OnEnable();
+        base.Start();
 
         slider.value = targetValue;
     }

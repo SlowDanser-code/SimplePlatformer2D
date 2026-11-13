@@ -253,6 +253,18 @@ public static class GameplayValidation
         Check(medkits[1].TryUse(playerHealth) && playerHealth.CurrentValue == 85,
             "A fresh medkit restores 25 health.");
 
+        Place(playerBody, new Vector2(0, 20));
+        until = Time.time + 26f;
+        while (Time.time < until)
+            yield return null;
+        MedkitSpawner spawner = Object.FindObjectOfType<MedkitSpawner>();
+        Medkit[] replenished = spawner.GetComponentsInChildren<Medkit>();
+        Check(replenished.Length == 6, "Timed spawning fills all six scene points.");
+        Check(medkits.All(m => m.gameObject.activeSelf), "Consumed medkits respawn on later timer ticks.");
+        Check(spawner.GetComponentsInChildren<Medkit>(true).Length == 6 &&
+              replenished.Select(m => m.transform.position).Distinct().Count() == 6,
+            "Respawning reuses medkits and never stacks them at occupied points.");
+
         // Re-enable actual controls so the death handler, rather than test setup, disables them.
         player.enabled = true;
         player.GetComponent<PlayerInputReader>().enabled = true;

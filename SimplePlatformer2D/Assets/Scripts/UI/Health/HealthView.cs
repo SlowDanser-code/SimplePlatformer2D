@@ -4,11 +4,23 @@ public abstract class HealthView : MonoBehaviour
 {
     [SerializeField] private Health health;
 
+    private bool isStarted;
+
     protected Health Health => health;
 
     protected virtual void OnEnable()
     {
         health.Changed += OnHealthChanged;
+
+        if (isStarted)
+        {
+            UpdateView();
+        }
+    }
+
+    protected virtual void Start()
+    {
+        isStarted = true;
 
         UpdateView();
     }
